@@ -1,0 +1,49 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.13.3
+    container_name: book-rag-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: book-rag-indexer
+    env_file:
+      - .env
+    environment:
+      QDRANT_URL: http://qdrant:6333
+    volumes:
+      - hf_cache:/app/.cache/huggingface
+    depends_on:
+      - qdrant
+    command: ["python", "scripts/index_to_qdrant.py"]
+    restart: "no"
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: book-rag-streamlit
+    ports:
+      - "8510:8501"
+    env_file:
+      - .env
+    environment:
+      QDRANT_URL: http://qdrant:6333
+    volumes:
+      - streamlit_chats:/app/streamlit_app/data
+      - hf_cache:/app/.cache/huggingface
+    depends_on:
+      indexer:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:
+  streamlit_chats:
+  hf_cache:

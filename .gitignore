@@ -1,0 +1,11 @@
+__pycache__/
+venv/
+.venv/
+.env
+.DS_Store
+.deepeval/
+report
+.streamlit
+evaluation/.deepeval/
+evaluation/tmp/
+streamlit_app/data/chats.json
